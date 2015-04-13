@@ -4,6 +4,8 @@
 CONTIKI_TARGET_SOURCEFILES += contiki-main.c params.c
 # Needed for slip
 CONTIKI_TARGET_SOURCEFILES += slip_uart.c
+# Needed for CFS
+CONTIKI_TARGET_SOURCEFILES += cfs-eeprom.c eeprom.c
 
 # Extra compiler flags. F_CPU defines not really necessary.
 CONTIKI_PLAT_DEFS = -DF_CPU=16000000UL -DAUTO_CRC_PADDING=2
