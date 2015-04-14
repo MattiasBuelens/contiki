@@ -176,6 +176,13 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_TCP_SPLIT       1
 #define UIP_CONF_DHCP_LIGHT      1
 
+#ifndef MY_NODE_ID
+#define MY_NODE_ID                0x55
+#endif /* MY_NODE_ID */
+
+#ifndef MY_CHANNEL_ID
+#define MY_CHANNEL_ID             26
+#endif /* MY_CHANNEL_ID */
 
 #if 1 /* No radio cycling */
 
@@ -183,8 +190,8 @@ typedef unsigned short uip_stats_t;
 #define NETSTACK_CONF_RDC         sicslowmac_driver
 #define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
-#define CHANNEL_802_15_4          11
-#define  EUI64_ADDRESS {0x02, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x00, 0x01}
+#define CHANNEL_802_15_4          MY_CHANNEL_ID
+#define EUI64_ADDRESS             {0x02, 0x11, 0x22, 0xff, 0xfe, 0x33, 0x44, MY_NODE_ID}
 /* AUTOACK receive mode gives better rssi measurements, even if ACK is never requested */
 #define RF230_CONF_AUTOACK        1
 /* Request 802.15.4 ACK on all packets sent (else autoretry). This is primarily for testing. */

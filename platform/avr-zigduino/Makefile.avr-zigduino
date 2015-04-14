@@ -21,6 +21,14 @@ AVRDUDE_PROGRAMMER=jtag3isp
 AVRDUDE_MCU=m128rfa1
 AVRDUDE_OPTIONS=-B 1
 
+ifdef MY_NODE_ID
+	CFLAGS += -DMY_NODE_ID=0x$(MY_NODE_ID)
+endif
+
+ifdef MY_CHANNEL
+	CFLAGS += -DMY_CHANNEL_ID=$(MY_CHANNEL)
+endif
+
 # Include avr cpu + radio makefiles
 CONTIKIAVR=$(CONTIKI)/cpu/avr
 include $(CONTIKIAVR)/Makefile.avr
