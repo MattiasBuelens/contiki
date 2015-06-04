@@ -38,6 +38,7 @@ import java.io.*;
 import java.util.*;
 import javax.swing.*;
 import org.apache.log4j.Logger;
+import javax.xml.bind.DatatypeConverter;
 import org.jdom.Element;
 
 import org.contikios.cooja.*;
@@ -201,11 +202,24 @@ public class ContikiCFS extends MoteInterface implements ContikiMoteInterface, P
     this.deleteObserver(observer);
   }
 
+
   public Collection<Element> getConfigXML() {
-    return null;
+      Vector<Element> config = new Vector<Element>();
+      Element element;
+
+      element = new Element("cfs");
+      element.setText(DatatypeConverter.printBase64Binary(getFilesystemData()));
+      config.add(element);
+
+      return config;
   }
 
   public void setConfigXML(Collection<Element> configXML, boolean visAvailable) {
+      for (Element element : configXML) {
+        if (element.getName().equals("cfs")) {
+          setFilesystemData(DatatypeConverter.parseBase64Binary(element.getText()));
+        }
+      }
   }
 
   /**
