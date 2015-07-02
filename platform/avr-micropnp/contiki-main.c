@@ -56,7 +56,7 @@
 #include "loader/symtab.h"
 
 #include "params.h"
-#include "radio/rf230bb/rf230bb.h"
+//#include "radio/rf230bb/rf230bb.h"
 #include "net/mac/frame802154.h"
 #include "net/mac/framer-802154.h"
 #include "net/ipv6/sicslowpan.h"
@@ -128,28 +128,28 @@ SIGNATURE = {
 };
 #endif
 
-/* LOW: Transceiver osc as CLK (16Mhz when prescaler 0x0), maximum start-up delay
- * HIGH: JTAG/OCD off, SPI on,  WatchDog override off (can be enabled at runtime), Bootsize 512b,
- * start bootsector at 0xfe00 (word address!), save EEPROM on reflash, start at addr 0000
- * EXT: BrownOut at 1.9V
- * Last fuse fd -> f5 due to immutable bits, otherwise avrdude gives a
- * verification error */
+/* External crystal osc as clock, maximum start-up delay. SPI and EESAVE
+ * enabled, brownout on 2.7V */
+//FUSES ={.low = 0xff, .high = 0xd7, .extended = 0xfd,};
 FUSES = {
-  .low = FUSE_CKSEL3,
+  .low = 0xff, // Nothing programmed
   .high = (FUSE_SPIEN & FUSE_EESAVE),
-  .extended = (FUSE_BODLEVEL1 & ~_BV(3)), /* 128rfa1 has an unused extended fuse bit which is immutable */
+  .extended = (FUSE_BODLEVEL1),
 };
+
+
 
 uint8_t
 rng_get_uint8(void) {
-#if 1
+#if 0
   /* Two RSSI reg bits (RND_VALUE) are random in rf231 
    * To improve randomness, we should add a delay between the 4 readouts. */
   uint8_t j;
   j = PHY_RSSI_struct.rnd_value + (PHY_RSSI_struct.rnd_value<<2) + (PHY_RSSI_struct.rnd_value<<4) + (PHY_RSSI_struct.rnd_value<<8);
 #else
 /* Get a pseudo random number using the ADC */
-  uint8_t i,j;
+  uint8_t i;
+  uint8_t j = 0;
   ADCSRA=1<<ADEN;             //Enable ADC, not free running, interrupt disabled, fastest clock
   for (i=0;i<4;i++) {
     ADMUX = 0;                //toggle reference to increase noise
@@ -239,7 +239,7 @@ uint8_t i;
   ctimer_init();
 
   /* Start radio and radio receive process */
-  NETSTACK_RADIO.init();
+//  NETSTACK_RADIO.init();
 
 /* Get a random seed for the 802.15.4 packet sequence number.
  * Some layers will ignore duplicates found in a history (e.g. Contikimac)
@@ -250,7 +250,8 @@ uint8_t i;
   /* Set addresses BEFORE starting tcpip process */
 
   linkaddr_t addr;
-
+  // Checks eeprom integrity, although we do not use a channel
+  params_get_channel();
   if (params_get_eui64(addr.u8)) {
       PRINTA("Random EUI64 address generated\n");
   }
@@ -260,9 +261,9 @@ uint8_t i;
 #endif  
   linkaddr_set_node_addr(&addr); 
 
-  rf230_set_pan_addr(params_get_panid(),params_get_panaddr(),(uint8_t *)&addr.u8);
-  rf230_set_channel(params_get_channel());
-  rf230_set_txpower(params_get_txpower());
+ // rf230_set_pan_addr(params_get_panid(),params_get_panaddr(),(uint8_t *)&addr.u8);
+ // rf230_set_channel(params_get_channel());
+ // rf230_set_txpower(params_get_txpower());
 
 #if NETSTACK_CONF_WITH_IPV6
   PRINTA("EUI-64 MAC: %x-%x-%x-%x-%x-%x-%x-%x\n",addr.u8[0],addr.u8[1],addr.u8[2],addr.u8[3],addr.u8[4],addr.u8[5],addr.u8[6],addr.u8[7]);
@@ -282,9 +283,7 @@ uint8_t i;
   NETSTACK_NETWORK.init();
 
 #if ANNOUNCE_BOOT
-  PRINTA("%s %s, channel %u , check rate %u Hz tx power %u\n",NETSTACK_MAC.name, NETSTACK_RDC.name, rf230_get_channel(),
-    CLOCK_SECOND / (NETSTACK_RDC.channel_check_interval() == 0 ? 1:NETSTACK_RDC.channel_check_interval()),
-    rf230_get_txpower());	  
+  PRINTA("Microduino boot\n");	  
 #if UIP_CONF_IPV6_RPL
   PRINTA("RPL Enabled\n");
 #endif

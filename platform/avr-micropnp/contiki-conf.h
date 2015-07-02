@@ -33,7 +33,7 @@
 
 /**
  * \file
- *         Configuration for Zigduino based on Atmega128rfa1
+ *         Configuration for Microduino based on Atmega644PA - 16 Mhz ext clock
  * \author
  *         Wilfried Daniels <wilfried.daniels@cs.kuleuven.be>
  */
@@ -42,10 +42,10 @@
 #define CONTIKI_CONF_H_
 
 /* Platform name, type, and MCU clock rate */
-#define PLATFORM_NAME  "Zigduino"
-#define PLATFORM_TYPE  ATMEGA128RFA1
+#define PLATFORM_NAME  "MicroPnP"
+#define PLATFORM_TYPE  ATMEGA128RFA1 //Not correct, change later
 #ifndef F_CPU
-#define F_CPU          16000000UL
+#define F_CPU          8000000UL
 #endif
 
 #include <stdint.h>
@@ -86,7 +86,7 @@ void clock_adjust_ticks(clock_time_t howmany);
 
 /* Pre-allocated memory for MMEM (in bytes) */
 /* Default is 4096. */
-//#define MMEM_CONF_SIZE 256
+#define MMEM_CONF_SIZE 256
 
 typedef unsigned long off_t;
 /* Starting address for code received via the codeprop app. Not tested. */
@@ -176,21 +176,53 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_TCP_SPLIT       1
 #define UIP_CONF_DHCP_LIGHT      1
 
+#if 1 /* No radio at all */
 
-#if 1 /* No radio cycling */
+#define NETSTACK_CONF_MAC         nullmac_driver
+#define NETSTACK_CONF_RDC         nullrdc_driver
+#define NETSTACK_CONF_FRAMER      framer_nullmac
+#define NETSTACK_CONF_RADIO       nullradio_driver
+#define  EUI64_ADDRESS {0x02, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x00, 0x01}
+/* Request 802.15.4 ACK on all packets sent (else autoretry). This is primarily for testing. */
+#define SICSLOWPAN_CONF_ACK_ALL   0
+#define SICSLOWPAN_CONF_FRAG      1
+/* Most browsers reissue GETs after 3 seconds which stops fragment reassembly so a longer MAXAGE does no good */
+#define SICSLOWPAN_CONF_MAXAGE    3
+/* How long to wait before terminating an idle TCP connection. Smaller to allow faster sleep. Default is 120 seconds */
+/* If wait is too short the connection can be reset as a result of multiple fragment reassembly timeouts */
+#define UIP_CONF_WAIT_TIMEOUT    20
+/* 211 bytes per queue buffer */
+#define QUEUEBUF_CONF_NUM         8
+/* 54 bytes per queue ref buffer */
+#define QUEUEBUF_CONF_REF_NUM     2
+/* Allocate remaining RAM as desired */
+/* 30 bytes per TCP connection */
+/* 6LoWPAN does not do well with concurrent TCP streams, as new browser GETs collide with packets coming */
+/* from previous GETs, causing decreased throughput, retransmissions, and timeouts. Increase to study this. */
+/* ACKs to other ports become interleaved with computation-intensive GETs, so ACKs are particularly missed. */
+/* Increasing the number of packet receive buffers in RAM helps to keep ACKs from being lost */
+#define UIP_CONF_MAX_CONNECTIONS  4
+/* 2 bytes per TCP listening port */
+#define UIP_CONF_MAX_LISTENPORTS  4
+/* 25 bytes per UDP connection */
+#define UIP_CONF_UDP_CONNS       10
+/* See uip-ds6.h */
+#define NBR_TABLE_CONF_MAX_NEIGHBORS      20
+#define UIP_CONF_DS6_DEFRT_NBU    2
+#define UIP_CONF_DS6_PREFIX_NBU   3
+#define UIP_CONF_MAX_ROUTES    20
+#define UIP_CONF_DS6_ADDR_NBU     3
+#define UIP_CONF_DS6_MADDR_NBU    0
+#define UIP_CONF_DS6_AADDR_NBU    0
+
+#elif 0 /* No radio cycling */
 
 #define NETSTACK_CONF_MAC         nullmac_driver
 #define NETSTACK_CONF_RDC         sicslowmac_driver
 #define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
-#ifndef CHANNEL
-#define CHANNEL 11
-#endif
-#define CHANNEL_802_15_4          CHANNEL
-#ifndef MAC
-#define MAC 0x01
-#endif
-#define  EUI64_ADDRESS {0x02, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x00, MAC}
+#define CHANNEL_802_15_4          11
+#define  EUI64_ADDRESS {0x02, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x00, 0x01}
 /* AUTOACK receive mode gives better rssi measurements, even if ACK is never requested */
 #define RF230_CONF_AUTOACK        1
 /* Request 802.15.4 ACK on all packets sent (else autoretry). This is primarily for testing. */
