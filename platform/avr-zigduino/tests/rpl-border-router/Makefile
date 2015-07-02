@@ -10,8 +10,6 @@ PROJECT_SOURCEFILES += slip-bridge.c
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 
-MY_NODE_ID = 1
-MY_CHANNEL = 26
 
 
 ifeq ($(PREFIX),)
